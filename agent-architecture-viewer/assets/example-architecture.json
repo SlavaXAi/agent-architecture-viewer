@@ -1,0 +1,177 @@
+{
+  "id": "demo-research-agent",
+  "title": "Вымышленный агент исследования",
+  "version": "example-v1",
+  "updatedAt": "2026-10-06",
+  "status": "planned",
+  "sampleKind": "synthetic",
+  "limitation": "Это только пример контракта. Агент и инструменты не исполняются.",
+  "nodes": [
+    {
+      "id": "input",
+      "title": "Задача пользователя",
+      "kind": "input",
+      "status": "planned",
+      "purpose": "Получить задачу и ссылки на материалы.",
+      "implementation": "Вымышленный пример, подключения пока нет.",
+      "steps": [
+        {
+          "title": "Получить запрос",
+          "description": "Передать цель и идентификаторы материалов."
+        }
+      ],
+      "input": {
+        "message": "Найти данные по теме",
+        "fileId": "demo-file"
+      },
+      "output": {
+        "taskId": "demo-task",
+        "goal": "Найти источники"
+      },
+      "decisions": [
+        "Нужен ли дополнительный контекст?"
+      ],
+      "sourceFiles": []
+    },
+    {
+      "id": "agent",
+      "title": "Агент исследования",
+      "kind": "agent",
+      "status": "planned",
+      "purpose": "Выбрать полезное действие по результатам инструментов.",
+      "implementation": "Вымышленный агент, не запущен.",
+      "steps": [
+        {
+          "title": "Выбрать действие",
+          "description": "Запросить чтение материала или поиск источников."
+        }
+      ],
+      "input": {
+        "taskId": "demo-task",
+        "observations": []
+      },
+      "output": {
+        "tool": "read_document",
+        "arguments": {
+          "fileId": "demo-file"
+        }
+      },
+      "decisions": [
+        "Если информации не хватает, выбрать подходящее уточнение."
+      ],
+      "sourceFiles": []
+    },
+    {
+      "id": "reader",
+      "title": "Прочитать документ",
+      "kind": "tool",
+      "status": "planned",
+      "purpose": "Вернуть компактные данные из сохранённого файла.",
+      "implementation": "Исполнитель выбирается в проекте получателя.",
+      "steps": [
+        {
+          "title": "Извлечь",
+          "description": "Прочитать материал и сохранить исходный текст."
+        },
+        {
+          "title": "Сократить",
+          "description": "Вернуть нужные поля со ссылкой на оригинал."
+        }
+      ],
+      "input": {
+        "fileId": "demo-file"
+      },
+      "output": {
+        "summary": "Учебное описание",
+        "sourceRef": "demo-source"
+      },
+      "decisions": [
+        "При ошибке вернуть её причину."
+      ],
+      "sourceFiles": []
+    },
+    {
+      "id": "search",
+      "title": "Найти источники",
+      "kind": "tool",
+      "status": "planned",
+      "purpose": "Вернуть список ссылок и короткие фрагменты.",
+      "implementation": "Поисковый сервис выбирается отдельно.",
+      "steps": [
+        {
+          "title": "Запросить выдачу",
+          "description": "Передать запрос выбранному поисковому API."
+        }
+      ],
+      "input": {
+        "query": "учебная тема"
+      },
+      "output": {
+        "items": [
+          {
+            "url": "https://example.invalid/source",
+            "title": "Вымышленный источник",
+            "snippet": "Учебный пример."
+          }
+        ]
+      },
+      "decisions": [
+        "Выбрать источник или изменить запрос."
+      ],
+      "sourceFiles": []
+    },
+    {
+      "id": "result",
+      "title": "Показать результат",
+      "kind": "output",
+      "status": "planned",
+      "purpose": "Показать сохранённые данные с источниками.",
+      "implementation": "Шаблон своего проекта.",
+      "steps": [
+        {
+          "title": "Собрать",
+          "description": "Заполнить шаблон проверенными записями."
+        }
+      ],
+      "input": {
+        "sourceRefs": [
+          "demo-source"
+        ]
+      },
+      "output": {
+        "status": "example",
+        "summary": "Учебный результат"
+      },
+      "decisions": [
+        "Не выдавать пример за выполненное исследование."
+      ],
+      "sourceFiles": []
+    }
+  ],
+  "edges": [
+    {
+      "from": "input",
+      "to": "agent",
+      "kind": "data",
+      "label": "Задача"
+    },
+    {
+      "from": "agent",
+      "to": "reader",
+      "kind": "tool",
+      "label": "Вызов и результат"
+    },
+    {
+      "from": "agent",
+      "to": "search",
+      "kind": "tool",
+      "label": "Вызов и результат"
+    },
+    {
+      "from": "agent",
+      "to": "result",
+      "kind": "data",
+      "label": "Сохранённые данные"
+    }
+  ]
+}
