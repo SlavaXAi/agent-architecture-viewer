@@ -5,7 +5,8 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
 FILES = ('SKILL.md', 'agents/openai.yaml', 'references/architecture-contract.md',
-         'assets/example-architecture.json', 'scripts/package_skill.py')
+         'assets/example-architecture.json', 'assets/interactive-canvas.js',
+         'assets/canvas-state.js', 'scripts/package_skill.py')
 
 def package(output: Path) -> list[str]:
     root = Path(__file__).resolve().parents[1]
