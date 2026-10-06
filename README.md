@@ -10,7 +10,7 @@
 
 > Установи навык agent-architecture-viewer из https://github.com/SlavaXAi/agent-architecture-viewer — папка agent-architecture-viewer. Затем добавь в мой проект раздел «Агенты» с кликабельной архитектурой, внутренними шагами инструментов и входными/выходными JSON. Нужен только просмотр, без редактора связей. Сначала кратко объясни объём изменений.
 
-Можно скачать репозиторий через **Code → Download ZIP** и передать папку `agent-architecture-viewer` своему Codex. После установки перезапустите Codex, если новый навык ещё не появился.
+Можно скачать репозиторий через **Code → Download ZIP** и передать папку `agent-architecture-viewer` своему Codex.
 
 ## Что внутри
 
