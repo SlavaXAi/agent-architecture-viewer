@@ -1,5 +1,9 @@
 import { Graph, Shape, History, Snapline } from '@antv/x6';
 import { readCanvasState, hasConnectionDraft } from './canvas-state.js';
+import { layoutSingleAgent } from './architecture-layout.js';
+import { installCanvasGestures } from './canvas-gestures.js';
+
+export { layoutSingleAgent };
 
 // Reusable visual adapter. No model, provider, API, storage or product dependencies.
 Shape.HTML.register({
@@ -7,7 +11,8 @@ Shape.HTML.register({
   html: cell => cell.getData().render(),
 });
 
-export function createCanvas({ container, nodes, edges, renderNode, initialState = null, editableLayout = true, editableConnections = false, routeEdge = null, onSelectNode = () => {}, onChange = () => {}, colors = {} }) {
+export function createCanvas({ container, nodes, edges, renderNode, initialState = null, layout = 'single-agent', editableLayout = true, editableConnections = false, routeEdge = null, onSelectNode = () => {}, onChange = () => {}, colors = {} }) {
+  if (layout === 'single-agent') ({ nodes, edges } = layoutSingleAgent(nodes, edges));
   const color = { accent: '#3b82f6', line: '#7b8493', surface: '#fff', ...colors };
   const restored = readCanvasState(initialState, nodes, edges);
   let loading = true, disposed = false, selectedNode = null, selectedEdge = null, scheduled = null;
@@ -15,7 +20,7 @@ export function createCanvas({ container, nodes, edges, renderNode, initialState
     container, autoResize: true, async: false, clickThreshold: 4,
     grid: { size: 18, visible: false },
     panning: { enabled: true, eventTypes: ['leftMouseDown', 'mouseWheelDown'] },
-    mousewheel: { enabled: true, minScale: .35, maxScale: 2, zoomAtMousePosition: true, factor: 1.15 },
+    mousewheel: { enabled: false },
     scaling: { min: .35, max: 2 },
     connecting: {
       snap: { radius: 24 }, highlight: true, allowBlank: false, allowLoop: false, allowNode: false, allowEdge: false, allowMulti: 'withPort',
@@ -29,6 +34,7 @@ export function createCanvas({ container, nodes, edges, renderNode, initialState
   // Host apps often size all icon SVGs globally; the graph needs the full viewport.
   const svg = container.querySelector('.x6-graph-svg');
   if (svg) { svg.style.width = '100%'; svg.style.height = '100%'; }
+  const disposeGestures = installCanvasGestures(container, graph);
   const history = new History({ enabled: false, stackSize: 60, beforeAddCommand: (_event, args) => ['position', 'source', 'target', 'vertices'].includes(args.key) });
   graph.use(history); graph.use(new Snapline({ enabled: true, sharp: true, tolerance: 8 }));
   const groups = Object.fromEntries(['left', 'right', 'top', 'bottom'].map(side => [side, { position: side, attrs: { circle: { r: 4, magnet: true, stroke: color.accent, fill: color.surface, strokeWidth: 1.2 } } }]));
@@ -39,7 +45,7 @@ export function createCanvas({ container, nodes, edges, renderNode, initialState
   });
   const baseEdges = edges.map(edge => {
     const route = routeEdge?.(edge, graph.getNodes());
-    return { ...edge, vertices: route?.vertices || [], router: route?.router || { name: 'manhattan', args: { step: 12, padding: 18, maxLoopCount: 2000 } } };
+    return { ...edge, vertices: route?.vertices || edge.vertices || [], router: route?.router || edge.router || { name: 'manhattan', args: { step: 12, padding: 18, maxLoopCount: 2000 } } };
   });
   for (const edge of baseEdges) {
     const stored = restored?.links[edge.id];
@@ -109,7 +115,7 @@ export function createCanvas({ container, nodes, edges, renderNode, initialState
   history.enable(); loading = false; emit();
   return {
     selectNode,
-    zoom(direction) { graph.zoomTo(Math.min(2, Math.max(.35, graph.zoom() * (direction > 0 ? 1.2 : 1 / 1.2)))); emit(); },
+    zoom(direction) { graph.zoomTo(Math.min(2, Math.max(.35, graph.zoom() * (direction > 0 ? 1.1 : 1 / 1.1)))); emit(); },
     actualSize() { graph.zoomTo(1); emit(); }, fit,
     undo() { history.undo(); decorate(); emit(); }, redo() { history.redo(); decorate(); emit(); },
     moveNode(id, dx, dy) { if (editableLayout) graph.getCellById(id)?.translate(dx, dy); emit(); },
@@ -125,6 +131,6 @@ export function createCanvas({ container, nodes, edges, renderNode, initialState
       selectedEdge = null; history.clean(); decorate(); fit(); loading = false; emit();
     },
     snapshot,
-    dispose() { if (disposed) return; if (scheduled !== null) clearTimeout(scheduled); emit(); disposed = true; graph.dispose(); },
+    dispose() { if (disposed) return; if (scheduled !== null) clearTimeout(scheduled); emit(); disposed = true; disposeGestures(); graph.dispose(); },
   };
 }
